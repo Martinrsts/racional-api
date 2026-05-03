@@ -134,4 +134,102 @@ describe('GET /users/:userId/portfolios/orders', () => {
     expect(res.status).toBe(404);
     expect(res.body.error).toBeDefined();
   });
+
+  it('limits results when limit query param is provided', async () => {
+    const testUser = await createUserWithDefaults('order-get-limit@example.com');
+    await seedStocks();
+
+    for (let i = 0; i < 5; i++) {
+      await request(app)
+        .post(`/users/${testUser.id}/portfolios/orders`)
+        .send({
+          stockIsin: TEST_STOCKS[0].isin,
+          quantity: i + 1,
+          placedAt: new Date(`2024-01-${String(i + 1).padStart(2, '0')}T10:00:00.000Z`).toISOString(),
+        });
+    }
+
+    const res = await request(app).get(`/users/${testUser.id}/portfolios/orders?limit=2`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+  });
+
+  it('filters orders by from date', async () => {
+    const testUser = await createUserWithDefaults('order-get-from@example.com');
+    await seedStocks();
+
+    await request(app).post(`/users/${testUser.id}/portfolios/orders`).send({
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 1,
+      placedAt: new Date('2024-01-01T10:00:00.000Z').toISOString(),
+    });
+    await request(app).post(`/users/${testUser.id}/portfolios/orders`).send({
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 2,
+      placedAt: new Date('2024-06-01T10:00:00.000Z').toISOString(),
+    });
+    await request(app).post(`/users/${testUser.id}/portfolios/orders`).send({
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 3,
+      placedAt: new Date('2024-12-01T10:00:00.000Z').toISOString(),
+    });
+
+    const res = await request(app).get(
+      `/users/${testUser.id}/portfolios/orders?from=2024-06-01`
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+    expect(res.body.every((o: { quantity: number }) => o.quantity >= 2)).toBe(true);
+  });
+
+  it('returns results ordered by placedAt descending', async () => {
+    const testUser = await createUserWithDefaults('order-get-order@example.com');
+    await seedStocks();
+
+    await request(app).post(`/users/${testUser.id}/portfolios/orders`).send({
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 1,
+      placedAt: new Date('2024-01-01T10:00:00.000Z').toISOString(),
+    });
+    await request(app).post(`/users/${testUser.id}/portfolios/orders`).send({
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 2,
+      placedAt: new Date('2024-03-01T10:00:00.000Z').toISOString(),
+    });
+
+    const res = await request(app).get(`/users/${testUser.id}/portfolios/orders`);
+
+    expect(res.status).toBe(200);
+    expect(res.body[0].quantity).toBe(2);
+    expect(res.body[1].quantity).toBe(1);
+  });
+
+  it('returns 400 when limit is zero', async () => {
+    const testUser = await createUserWithDefaults('order-get-limit-zero@example.com');
+
+    const res = await request(app).get(`/users/${testUser.id}/portfolios/orders?limit=0`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('returns 400 when limit is negative', async () => {
+    const testUser = await createUserWithDefaults('order-get-limit-neg@example.com');
+
+    const res = await request(app).get(`/users/${testUser.id}/portfolios/orders?limit=-1`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('returns 400 when from is not a valid date', async () => {
+    const testUser = await createUserWithDefaults('order-get-from-invalid@example.com');
+
+    const res = await request(app).get(`/users/${testUser.id}/portfolios/orders?from=notadate`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
 });

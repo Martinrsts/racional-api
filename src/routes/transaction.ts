@@ -9,6 +9,11 @@ const createTransactionSchema = z.object({
   executedAt: z.coerce.date(),
 });
 
+const querySchema = z.object({
+  limit: z.coerce.number().int().positive().optional(),
+  from: z.coerce.date().optional(),
+});
+
 router.post('/', async (req: Request, res: Response) => {
   const result = createTransactionSchema.safeParse(req.body);
   if (!result.success) {
@@ -27,7 +32,15 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 router.get('/', async (req: Request, res: Response) => {
-  const transactions = await transactionService.getUserTransactions(req.params.userId);
+  const result = querySchema.safeParse(req.query);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.flatten() });
+    return;
+  }
+  const transactions = await transactionService.getUserTransactions(req.params.userId, {
+    limit: result.data.limit,
+    startDate: result.data.from,
+  });
   if (!transactions) {
     res.status(404).json({ error: 'Account not found' });
     return;

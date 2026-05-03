@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, gte } from 'drizzle-orm';
 import { db } from '../client.js';
 import { transaction } from '../schema.js';
 
@@ -17,7 +17,29 @@ export const transactionRepository = {
     return created as TransactionRecord;
   },
 
-  async findByAccountId(accountId: string): Promise<TransactionRecord[]> {
-    return db.select().from(transaction).where(eq(transaction.accountId, accountId)) as Promise<TransactionRecord[]>;
+  async findByAccountId(
+    accountId: string,
+    filters: { startDate?: Date; limit?: number } = {}
+  ): Promise<TransactionRecord[]> {
+    const { startDate, limit } = filters;
+
+    const conditions = [eq(transaction.accountId, accountId)];
+
+    if (startDate) {
+      conditions.push(gte(transaction.executedAt, startDate));
+    }
+
+    return limit
+      ? db
+          .select()
+          .from(transaction)
+          .where(and(...conditions))
+          .orderBy(desc(transaction.executedAt))
+          .limit(limit)
+      : db
+          .select()
+          .from(transaction)
+          .where(and(...conditions))
+          .orderBy(desc(transaction.executedAt));
   },
 };

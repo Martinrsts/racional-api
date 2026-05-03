@@ -44,5 +44,4 @@ router.patch('/', async (req: Request, res: Response) => {
   res.json(updated);
 });
 
-
 export { router as portfolioRouter };

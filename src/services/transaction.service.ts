@@ -1,11 +1,17 @@
 import { accountRepository } from '../db/repositories/account.repository.js';
-import { transactionRepository, TransactionRecord } from '../db/repositories/transaction.repository.js';
+import {
+  transactionRepository,
+  TransactionRecord,
+} from '../db/repositories/transaction.repository.js';
 
 export const transactionService = {
-  async createTransactionFromUser(userId: string, data: {
-    amount: number;
-    executedAt: Date;
-  }): Promise<TransactionRecord | null> {
+  async createTransactionFromUser(
+    userId: string,
+    data: {
+      amount: number;
+      executedAt: Date;
+    }
+  ): Promise<TransactionRecord | null> {
     const account = await accountRepository.findByUserId(userId);
     if (!account) return null;
     return transactionRepository.create({
@@ -17,9 +23,12 @@ export const transactionService = {
     });
   },
 
-  async getUserTransactions(userId: string): Promise<TransactionRecord[] | null> {
+  async getUserTransactions(
+    userId: string,
+    filters?: { startDate?: Date; limit?: number }
+  ): Promise<TransactionRecord[] | null> {
     const account = await accountRepository.findByUserId(userId);
     if (!account) return null;
-    return transactionRepository.findByAccountId(account.id);
+    return transactionRepository.findByAccountId(account.id, filters);
   },
 };

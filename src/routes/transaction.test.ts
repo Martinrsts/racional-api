@@ -118,4 +118,99 @@ describe('GET /users/:userId/accounts/transactions', () => {
     expect(res.status).toBe(404);
     expect(res.body.error).toBeDefined();
   });
+
+  it('limits results when limit query param is provided', async () => {
+    const testUser = await createUserWithDefaults('transaction-get-limit@example.com');
+
+    for (let i = 0; i < 5; i++) {
+      await request(app)
+        .post(`/users/${testUser.id}/accounts/transactions`)
+        .send({
+          amount: (i + 1) * 100,
+          executedAt: new Date(`2024-01-${String(i + 1).padStart(2, '0')}T10:00:00.000Z`).toISOString(),
+        });
+    }
+
+    const res = await request(app).get(`/users/${testUser.id}/accounts/transactions?limit=3`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(3);
+  });
+
+  it('filters transactions by from date', async () => {
+    const testUser = await createUserWithDefaults('transaction-get-from@example.com');
+
+    await request(app).post(`/users/${testUser.id}/accounts/transactions`).send({
+      amount: 100,
+      executedAt: new Date('2024-01-01T10:00:00.000Z').toISOString(),
+    });
+    await request(app).post(`/users/${testUser.id}/accounts/transactions`).send({
+      amount: 200,
+      executedAt: new Date('2024-06-01T10:00:00.000Z').toISOString(),
+    });
+    await request(app).post(`/users/${testUser.id}/accounts/transactions`).send({
+      amount: 300,
+      executedAt: new Date('2024-12-01T10:00:00.000Z').toISOString(),
+    });
+
+    const res = await request(app).get(
+      `/users/${testUser.id}/accounts/transactions?from=2024-06-01`
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveLength(2);
+    expect(res.body.every((t: { amount: string }) => Number(t.amount) >= 200)).toBe(true);
+  });
+
+  it('returns results ordered by executedAt descending', async () => {
+    const testUser = await createUserWithDefaults('transaction-get-order@example.com');
+
+    await request(app).post(`/users/${testUser.id}/accounts/transactions`).send({
+      amount: 100,
+      executedAt: new Date('2024-01-01T10:00:00.000Z').toISOString(),
+    });
+    await request(app).post(`/users/${testUser.id}/accounts/transactions`).send({
+      amount: 200,
+      executedAt: new Date('2024-03-01T10:00:00.000Z').toISOString(),
+    });
+
+    const res = await request(app).get(`/users/${testUser.id}/accounts/transactions`);
+
+    expect(res.status).toBe(200);
+    expect(res.body[0].amount).toBe('200');
+    expect(res.body[1].amount).toBe('100');
+  });
+
+  it('returns 400 when limit is zero', async () => {
+    const testUser = await createUserWithDefaults('transaction-get-limit-zero@example.com');
+
+    const res = await request(app).get(
+      `/users/${testUser.id}/accounts/transactions?limit=0`
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('returns 400 when limit is negative', async () => {
+    const testUser = await createUserWithDefaults('transaction-get-limit-neg@example.com');
+
+    const res = await request(app).get(
+      `/users/${testUser.id}/accounts/transactions?limit=-5`
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('returns 400 when from is not a valid date', async () => {
+    const testUser = await createUserWithDefaults('transaction-get-from-invalid@example.com');
+
+    const res = await request(app).get(
+      `/users/${testUser.id}/accounts/transactions?from=notadate`
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
 });

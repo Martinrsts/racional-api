@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, desc, eq, gte } from 'drizzle-orm';
 import { db } from '../client.js';
 import { order } from '../schema.js';
 
@@ -25,9 +25,28 @@ export const orderRepository = {
     return created as OrderRecord;
   },
 
-  async findByPortfolioId(portfolioId: string): Promise<OrderRecord[]> {
-    return db.select().from(order).where(eq(order.portfolioId, portfolioId)) as Promise<
-      OrderRecord[]
-    >;
+  async findByPortfolioId(
+    portfolioId: string,
+    filters: { limit?: number; startDate?: Date } = {}
+  ): Promise<OrderRecord[]> {
+    const { limit, startDate } = filters;
+    const conditions = [eq(order.portfolioId, portfolioId)];
+
+    if (startDate) {
+      conditions.push(gte(order.placedAt, startDate));
+    }
+
+    return limit
+      ? db
+          .select()
+          .from(order)
+          .where(and(...conditions))
+          .orderBy(desc(order.placedAt))
+          .limit(limit)
+      : db
+          .select()
+          .from(order)
+          .where(and(...conditions))
+          .orderBy(desc(order.placedAt));
   },
 };

@@ -10,6 +10,11 @@ const createOrderSchema = z.object({
   placedAt: z.coerce.date(),
 });
 
+const querySchema = z.object({
+  limit: z.coerce.number().int().positive().optional(),
+  from: z.coerce.date().optional(),
+});
+
 router.post('/', async (req: Request, res: Response) => {
   const result = createOrderSchema.safeParse(req.body);
   if (!result.success) {
@@ -26,7 +31,16 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 router.get('/', async (req: Request, res: Response) => {
-  const orders = await orderService.getUserOrders(req.params.userId);
+  const result = querySchema.safeParse(req.query);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.flatten() });
+    return;
+  }
+
+  const orders = await orderService.getUserOrders(req.params.userId, {
+    limit: result.data.limit,
+    startDate: result.data.from,
+  });
   if (!orders) {
     res.status(404).json({ error: 'Portfolio not found' });
     return;

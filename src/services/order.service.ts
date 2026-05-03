@@ -22,9 +22,12 @@ export const orderService = {
     });
   },
 
-  async getUserOrders(userId: string): Promise<OrderRecord[] | null> {
+  async getUserOrders(
+    userId: string,
+    filters?: { limit?: number; startDate?: Date }
+  ): Promise<OrderRecord[] | null> {
     const portfolio = await portfolioRepository.findByUserId(userId);
     if (!portfolio) return null;
-    return orderRepository.findByPortfolioId(portfolio.id);
+    return orderRepository.findByPortfolioId(portfolio.id, filters);
   },
 };

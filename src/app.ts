@@ -5,6 +5,7 @@ import { portfolioRouter } from './routes/portfolio.js';
 import { accountRouter } from './routes/account.js';
 import { orderRouter } from './routes/order.js';
 import { transactionRouter } from './routes/transaction.js';
+import { operationRouter } from './routes/operation.js';
 
 export const app = express();
 
@@ -20,3 +21,4 @@ app.use('/users/:userId/portfolios', portfolioRouter);
 app.use('/users/:userId/accounts', accountRouter);
 app.use('/users/:userId/portfolios/orders', orderRouter);
 app.use('/users/:userId/accounts/transactions', transactionRouter);
+app.use('/users/:userId/operations', operationRouter);
