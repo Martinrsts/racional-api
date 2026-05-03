@@ -7,7 +7,6 @@ const router = Router({ mergeParams: true });
 const createOrderSchema = z.object({
   stockIsin: z.string().min(1),
   quantity: z.number().int(),
-  accountId: z.string().uuid(),
   placedAt: z.coerce.date(),
 });
 

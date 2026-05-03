@@ -7,9 +7,15 @@ export type OrderRecord = {
   portfolioId: string;
   stockIsin: string;
   quantity: number;
-  accountId: string;
   placedAt: Date;
   createdAt: Date;
+};
+
+export type NewHoldingFromOrdersWithStock = {
+  portfolioId: string;
+  stockIsin: string;
+  quantity: number;
+  currentPrice: string;
 };
 
 export const orderRepository = {
@@ -20,6 +26,8 @@ export const orderRepository = {
   },
 
   async findByPortfolioId(portfolioId: string): Promise<OrderRecord[]> {
-    return db.select().from(order).where(eq(order.portfolioId, portfolioId)) as Promise<OrderRecord[]>;
+    return db.select().from(order).where(eq(order.portfolioId, portfolioId)) as Promise<
+      OrderRecord[]
+    >;
   },
 };

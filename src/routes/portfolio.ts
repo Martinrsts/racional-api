@@ -1,11 +1,21 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { portfolioService } from '../services/portfolio.service.js';
+import { holdingService } from '../services/holding.service.js';
 
 const router = Router({ mergeParams: true });
 
 const updatePortfolioSchema = z.object({
   name: z.string().min(1),
+});
+
+router.get('/total', async (req: Request, res: Response) => {
+  const total = await holdingService.getUserPortfolioTotal(req.params.userId);
+  if (!total) {
+    res.status(404).json({ error: 'Portfolio not found' });
+    return;
+  }
+  res.json(total);
 });
 
 router.get('/', async (req: Request, res: Response) => {

@@ -15,7 +15,7 @@ export const portfolio = pgTable('portfolio', {
 
 export const stock = pgTable('stock', {
   isin: varchar('isin', { length: 255 }).notNull().unique().primaryKey(),
-  actualPrice: numeric('actual_price').notNull(),
+  currentPrice: numeric('current_price').notNull(),
 });
 
 export const holding = pgTable('holding', {
@@ -39,7 +39,6 @@ export const order = pgTable('order', {
   portfolioId: uuid('portfolio_id').references(() => portfolio.id, { onDelete: 'cascade' }).notNull(),
   stockIsin: varchar('stock_isin', { length: 255 }).references(() => stock.isin, { onDelete: 'cascade' }).notNull(),
   quantity: integer('quantity').notNull(),
-  accountId: uuid('account_id').references(() => account.id, { onDelete: 'cascade' }).notNull(),
   placedAt: timestamp('placed_at').notNull(),
   createdAt: timestamp('created_at').notNull(),
 });

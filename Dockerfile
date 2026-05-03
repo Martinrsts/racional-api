@@ -5,12 +5,13 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 
+COPY drizzle ./drizzle
 COPY tsconfig.json drizzle.config.ts ./
 COPY src ./src
 
 RUN npm run build
 
-# ---
+# --- PRODUCTION ---
 
 FROM node:22-alpine AS production
 

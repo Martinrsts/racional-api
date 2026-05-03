@@ -1,7 +1,6 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: racional-postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -16,9 +15,39 @@ services:
       timeout: 5s
       retries: 5
 
+  migrate:
+    build:
+      context: .
+      target: builder
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/racional
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c "npx drizzle-kit migrate --config=drizzle.config.ts"
+    restart: 'no'
+
+  racional-api:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/racional
+    ports:
+      - '${API_PORT:-3000}:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
   postgres-test:
     image: postgres:16-alpine
-    container_name: racional-postgres-test
     profiles: ['test']
     environment:
       POSTGRES_USER: postgres
@@ -33,18 +62,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-
-  racional-api:
-    build: .
-    container_name: racional-api
-    env_file: .env
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/racional
-    ports:
-      - '${API_PORT:-3000}:3000'
-    depends_on:
-      postgres:
-        condition: service_healthy
 
 volumes:
   postgres_data:

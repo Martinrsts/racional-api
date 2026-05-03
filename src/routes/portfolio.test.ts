@@ -3,8 +3,8 @@ import request from 'supertest';
 import { eq } from 'drizzle-orm';
 import { app } from '../app.js';
 import { db } from '../db/client.js';
-import { portfolio } from '../db/schema.js';
-import { createUserWithDefaults } from '../tests/helpers.js';
+import { holding, order, portfolio } from '../db/schema.js';
+import { createUserWithDefaults, seedStocks, TEST_STOCKS } from '../tests/helpers.js';
 
 describe('GET /users/:userId/portfolios', () => {
   it('returns the portfolio for the user', async () => {
@@ -62,11 +62,269 @@ describe('PATCH /users/:userId/portfolios', () => {
   it('returns 404 when user has no portfolio', async () => {
     const userId = crypto.randomUUID();
 
-    const res = await request(app)
-      .patch(`/users/${userId}/portfolios`)
-      .send({ name: 'New Name' });
+    const res = await request(app).patch(`/users/${userId}/portfolios`).send({ name: 'New Name' });
 
     expect(res.status).toBe(404);
     expect(res.body.error).toBeDefined();
+  });
+});
+
+describe('GET /users/:userId/portfolios/total', () => {
+  it('returns 404 when user has no portfolio', async () => {
+    const res = await request(app).get(`/users/${crypto.randomUUID()}/portfolios/total`);
+
+    expect(res.status).toBe(404);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('returns empty holdings and zero totalValue when portfolio has no activity', async () => {
+    const { id: userId } = await createUserWithDefaults('total-empty@example.com');
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ holdings: [], totalValue: 0 });
+  });
+
+  it('returns existing holding with correct value when no new orders exist', async () => {
+    const { id: userId, portfolioId } = await createUserWithDefaults(
+      'total-no-new-orders@example.com'
+    );
+    await seedStocks();
+
+    await db.insert(holding).values({
+      id: crypto.randomUUID(),
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 10,
+      updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+    });
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    const expectedValue = 10 * parseFloat(TEST_STOCKS[0].currentPrice);
+    expect(res.body.holdings).toHaveLength(1);
+    expect(res.body.holdings[0]).toMatchObject({
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 10,
+      currentPrice: TEST_STOCKS[0].currentPrice,
+      holdingValue: expectedValue,
+    });
+    expect(res.body.totalValue).toBeCloseTo(expectedValue);
+  });
+
+  it('updates holding quantity and persists to DB when new orders exist after updatedAt', async () => {
+    const { id: userId, portfolioId } = await createUserWithDefaults(
+      'total-update-holding@example.com'
+    );
+    await seedStocks();
+
+    const holdingId = crypto.randomUUID();
+    await db.insert(holding).values({
+      id: holdingId,
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 10,
+      updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+    });
+    await db.insert(order).values({
+      id: crypto.randomUUID(),
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 5,
+      placedAt: new Date('2024-01-15T10:00:00.000Z'),
+      createdAt: new Date('2024-01-15T10:00:00.000Z'),
+    });
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    const expectedValue = 15 * parseFloat(TEST_STOCKS[0].currentPrice);
+    expect(res.body.holdings[0].quantity).toBe(15);
+    expect(res.body.holdings[0].holdingValue).toBeCloseTo(expectedValue);
+    expect(res.body.totalValue).toBeCloseTo(expectedValue);
+
+    const [dbRow] = await db.select().from(holding).where(eq(holding.id, holdingId));
+    expect(dbRow.quantity).toBe(15);
+  });
+
+  it('does not update holding for orders created before updatedAt', async () => {
+    const { id: userId, portfolioId } = await createUserWithDefaults(
+      'total-old-orders@example.com'
+    );
+    await seedStocks();
+
+    const holdingId = crypto.randomUUID();
+    await db.insert(holding).values({
+      id: holdingId,
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 10,
+      updatedAt: new Date('2024-06-01T00:00:00.000Z'),
+    });
+    await db.insert(order).values({
+      id: crypto.randomUUID(),
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 5,
+      placedAt: new Date('2024-01-15T10:00:00.000Z'),
+      createdAt: new Date('2024-01-15T10:00:00.000Z'),
+    });
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.holdings[0].quantity).toBe(10);
+
+    const [dbRow] = await db.select().from(holding).where(eq(holding.id, holdingId));
+    expect(dbRow.quantity).toBe(10);
+  });
+
+  it('creates a new holding from orders when no holding exists for that stock', async () => {
+    const { id: userId, portfolioId } = await createUserWithDefaults(
+      'total-new-holding@example.com'
+    );
+    await seedStocks();
+
+    await db.insert(order).values({
+      id: crypto.randomUUID(),
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 10,
+      placedAt: new Date('2024-01-15T10:00:00.000Z'),
+      createdAt: new Date('2024-01-15T10:00:00.000Z'),
+    });
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.holdings).toHaveLength(1);
+    expect(res.body.holdings[0]).toMatchObject({
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 10,
+    });
+    const expectedValue = 10 * parseFloat(TEST_STOCKS[0].currentPrice);
+    expect(res.body.totalValue).toBeCloseTo(expectedValue);
+
+    const dbHoldings = await db.select().from(holding).where(eq(holding.portfolioId, portfolioId));
+    expect(dbHoldings).toHaveLength(1);
+    expect(dbHoldings[0].quantity).toBe(10);
+  });
+
+  it('sums multiple orders for the same stock when creating a new holding', async () => {
+    const { id: userId, portfolioId } = await createUserWithDefaults(
+      'total-multi-orders@example.com'
+    );
+    await seedStocks();
+
+    await db.insert(order).values([
+      {
+        id: crypto.randomUUID(),
+        portfolioId,
+        stockIsin: TEST_STOCKS[0].isin,
+        quantity: 10,
+        placedAt: new Date('2024-01-15T10:00:00.000Z'),
+        createdAt: new Date('2024-01-15T10:00:00.000Z'),
+      },
+      {
+        id: crypto.randomUUID(),
+        portfolioId,
+        stockIsin: TEST_STOCKS[0].isin,
+        quantity: 5,
+        placedAt: new Date('2024-01-16T10:00:00.000Z'),
+        createdAt: new Date('2024-01-16T10:00:00.000Z'),
+      },
+    ]);
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.holdings).toHaveLength(1);
+    expect(res.body.holdings[0].quantity).toBe(15);
+  });
+
+  it('updates an existing holding and creates a new one simultaneously', async () => {
+    const { id: userId, portfolioId } = await createUserWithDefaults('total-mixed@example.com');
+    await seedStocks();
+
+    const holdingId = crypto.randomUUID();
+    await db.insert(holding).values({
+      id: holdingId,
+      portfolioId,
+      stockIsin: TEST_STOCKS[0].isin,
+      quantity: 10,
+      updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+    });
+    await db.insert(order).values([
+      {
+        id: crypto.randomUUID(),
+        portfolioId,
+        stockIsin: TEST_STOCKS[0].isin,
+        quantity: 5,
+        placedAt: new Date('2024-01-15T10:00:00.000Z'),
+        createdAt: new Date('2024-01-15T10:00:00.000Z'),
+      },
+      {
+        id: crypto.randomUUID(),
+        portfolioId,
+        stockIsin: TEST_STOCKS[1].isin,
+        quantity: 8,
+        placedAt: new Date('2024-01-15T10:00:00.000Z'),
+        createdAt: new Date('2024-01-15T10:00:00.000Z'),
+      },
+    ]);
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.holdings).toHaveLength(2);
+
+    const h0 = res.body.holdings.find(
+      (h: { stockIsin: string }) => h.stockIsin === TEST_STOCKS[0].isin
+    );
+    const h1 = res.body.holdings.find(
+      (h: { stockIsin: string }) => h.stockIsin === TEST_STOCKS[1].isin
+    );
+    expect(h0.quantity).toBe(15);
+    expect(h1.quantity).toBe(8);
+
+    const expectedTotal =
+      15 * parseFloat(TEST_STOCKS[0].currentPrice) + 8 * parseFloat(TEST_STOCKS[1].currentPrice);
+    expect(res.body.totalValue).toBeCloseTo(expectedTotal);
+  });
+
+  it('computes correct totalValue across multiple existing holdings', async () => {
+    const { id: userId, portfolioId } = await createUserWithDefaults(
+      'total-multi-holdings@example.com'
+    );
+    await seedStocks();
+
+    await db.insert(holding).values([
+      {
+        id: crypto.randomUUID(),
+        portfolioId,
+        stockIsin: TEST_STOCKS[0].isin,
+        quantity: 10,
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+      },
+      {
+        id: crypto.randomUUID(),
+        portfolioId,
+        stockIsin: TEST_STOCKS[1].isin,
+        quantity: 5,
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+      },
+    ]);
+
+    const res = await request(app).get(`/users/${userId}/portfolios/total`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.holdings).toHaveLength(2);
+    const expectedTotal =
+      10 * parseFloat(TEST_STOCKS[0].currentPrice) + 5 * parseFloat(TEST_STOCKS[1].currentPrice);
+    expect(res.body.totalValue).toBeCloseTo(expectedTotal);
   });
 });
