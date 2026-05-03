@@ -1,0 +1,1 @@
+ALTER TABLE "portfolio" ALTER COLUMN "user_id" SET NOT NULL;

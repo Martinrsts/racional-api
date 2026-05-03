@@ -15,6 +15,27 @@
       "when": 1777834428288,
       "tag": "0001_amusing_wrecker",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777834847847,
+      "tag": "0002_mysterious_colossus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1777835910844,
+      "tag": "0003_hesitant_lake",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1777836302796,
+      "tag": "0004_little_stature",
+      "breakpoints": true
     }
   ]
 }

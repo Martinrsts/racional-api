@@ -9,7 +9,7 @@ export const user = pgTable('user', {
 
 export const portfolio = pgTable('portfolio', {
   id: uuid('id').primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
 });
 
@@ -27,9 +27,9 @@ export const holding = pgTable('holding', {
 
 export const account = pgTable('account', {
   id: uuid('id').primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
   name: varchar('name', { length: 255 }).notNull(),
-  balance: numeric('balance').notNull(),
+  balance: numeric('balance').notNull().default("0"),
   updatedAt: timestamp('updated_at').notNull(),
 });
 

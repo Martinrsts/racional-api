@@ -1,5 +1,7 @@
 import { userRepository } from '../db/repositories/user.repository.js';
 import { EmailAlreadyInUseError } from '../errors.js';
+import { portfolioService } from './portfolio.service.js';
+import { accountService } from './account.service.js';
 
 export type UserRecord = {
     id: string;
@@ -22,8 +24,14 @@ export const userService = {
         firstName: data.firstName ? data.firstName : null,
         lastName: data.lastName ? data.lastName : null,
       });
-  
+
       if (!created) throw new Error('Failed to create user');
+
+      await Promise.all([
+        portfolioService.create({ userId: created.id, name: 'Default' }),
+        accountService.create({ userId: created.id, name: 'Default' }),
+      ]);
+
       return created;
     } catch (err) {
       if (err instanceof Error && err.message === 'Email already in use') {
