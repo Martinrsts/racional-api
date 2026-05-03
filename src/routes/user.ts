@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { EmailAlreadyInUseError } from '../errors.js';
 import { userService } from '../services/user.service.js';
+import { accountService } from '../services/account.service.js';
 
 const router = Router();
 const updateUserSchema = z
@@ -62,12 +63,15 @@ router.post('/', async (req: Request, res: Response) => {
 
 router.get('/:userId', async (req: Request, res: Response) => {
     const userId = req.params.userId;
-    const user = await userService.getById(userId);
+    const [user, account] = await Promise.all([
+        userService.getById(userId),
+        accountService.getByUserId(userId),
+    ]);
     if (!user) {
         res.status(404).json({ error: 'User not found' });
         return;
     }
-    res.json(user);
+    res.json({ ...user, balance: account?.balance ?? null });
 });
 
 export { router as userRouter };

@@ -1,6 +1,6 @@
-import { eq } from 'drizzle-orm';
+import { and, eq, gt, sql } from 'drizzle-orm';
 import { db } from '../client.js';
-import { account } from '../schema.js';
+import { account, transaction } from '../schema.js';
 
 export type AccountRecord = {
   id: string;
@@ -38,5 +38,24 @@ export const accountRepository = {
       return null;
     }
     return results[0];
+  },
+
+  async updateBalanceFromTransactions(accountId: string): Promise<void> {
+    const subquery = db
+      .select({
+        id: account.id,
+        newBalance: sql<string>`${account.balance} + sum(${transaction.amount})`.as('newBalance'),
+      })
+      .from(account)
+      .innerJoin(transaction, eq(transaction.accountId, account.id))
+      .where(and(eq(account.id, accountId), gt(transaction.createdAt, account.updatedAt)))
+      .groupBy(account.id, account.balance)
+      .as('subquery');
+
+    await db
+      .update(account)
+      .set({ balance: sql`${subquery.newBalance}`, updatedAt: sql`now()` })
+      .from(subquery)
+      .where(eq(account.id, subquery.id));
   },
 };

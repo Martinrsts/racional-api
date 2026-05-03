@@ -15,7 +15,7 @@ Rules:
 - Place the output file alongside the route file with a `.test.ts` suffix
 - If needs to implemente a new helper function, add it to `@src/tests/helpers.ts` and use it in the test file
 
-After writing the tests, run them with `npm run db:coverage` and ensure they all pass.
+After writing the tests, run them with `npm run test:coverage` and ensure they all pass.
 Debug and fix any failures before moving on.
 
 Once passing, check the coverage report for the routes being tested and ensure

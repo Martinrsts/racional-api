@@ -20,6 +20,11 @@ export const accountService = {
   },
 
   async getByUserId(userId: string): Promise<AccountRecord | null> {
+    const account = await accountRepository.findByUserId(userId);
+    if (!account) return null;
+
+    await accountRepository.updateBalanceFromTransactions(account.id);
+
     return accountRepository.findByUserId(userId);
   },
 
