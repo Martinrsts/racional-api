@@ -15,12 +15,13 @@ export const portfolio = pgTable('portfolio', {
 
 export const stock = pgTable('stock', {
   isin: varchar('isin', { length: 255 }).notNull().unique().primaryKey(),
+  actualPrice: numeric('actual_price').notNull(),
 });
 
 export const holding = pgTable('holding', {
   id: uuid('id').primaryKey(),
-  portfolioId: uuid('portfolio_id').references(() => portfolio.id, { onDelete: 'cascade' }),
-  stockIsin: varchar('stock_isin', { length: 255 }).references(() => stock.isin, { onDelete: 'cascade' }),
+  portfolioId: uuid('portfolio_id').references(() => portfolio.id, { onDelete: 'cascade' }).notNull(),
+  stockIsin: varchar('stock_isin', { length: 255 }).references(() => stock.isin, { onDelete: 'cascade' }).notNull(),
   quantity: integer('quantity').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
 });
@@ -35,18 +36,17 @@ export const account = pgTable('account', {
 
 export const order = pgTable('order', {
   id: uuid('id').primaryKey(),
-  portfolioId: uuid('portfolio_id').references(() => portfolio.id, { onDelete: 'cascade' }),
-  stockIsin: varchar('stock_isin', { length: 255 }).references(() => stock.isin, { onDelete: 'cascade' }),
+  portfolioId: uuid('portfolio_id').references(() => portfolio.id, { onDelete: 'cascade' }).notNull(),
+  stockIsin: varchar('stock_isin', { length: 255 }).references(() => stock.isin, { onDelete: 'cascade' }).notNull(),
   quantity: integer('quantity').notNull(),
-  accountId: uuid('account_id').references(() => account.id, { onDelete: 'cascade' }),
+  accountId: uuid('account_id').references(() => account.id, { onDelete: 'cascade' }).notNull(),
   placedAt: timestamp('placed_at').notNull(),
   createdAt: timestamp('created_at').notNull(),
 });
 
 export const transaction = pgTable('transaction', {
   id: uuid('id').primaryKey(),
-  accountId: uuid('account_id').references(() => account.id, { onDelete: 'cascade' }),
-  orderId: uuid('order_id').references(() => order.id, { onDelete: 'cascade' }),
+  accountId: uuid('account_id').references(() => account.id, { onDelete: 'cascade' }).notNull(),
   amount: numeric('amount').notNull(),
   executedAt: timestamp('executed_at').notNull(),
   createdAt: timestamp('created_at').notNull(),

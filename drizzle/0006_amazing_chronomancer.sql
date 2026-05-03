@@ -1,0 +1,1 @@
+ALTER TABLE "stock" ADD COLUMN "actual_price" numeric NOT NULL;

@@ -36,6 +36,27 @@
       "when": 1777836302796,
       "tag": "0004_little_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777837458987,
+      "tag": "0005_steady_caretaker",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777837567884,
+      "tag": "0006_amazing_chronomancer",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1777837989029,
+      "tag": "0007_classy_spyke",
+      "breakpoints": true
     }
   ]
 }
