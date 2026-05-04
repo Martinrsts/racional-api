@@ -9,7 +9,9 @@ export const user = pgTable('user', {
 
 export const portfolio = pgTable('portfolio', {
   id: uuid('id').primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id')
+    .references(() => user.id, { onDelete: 'cascade' })
+    .notNull(),
   name: varchar('name', { length: 255 }).notNull(),
 });
 
@@ -20,24 +22,30 @@ export const stock = pgTable('stock', {
 
 export const holding = pgTable('holding', {
   id: uuid('id').primaryKey(),
-  portfolioId: uuid('portfolio_id').references(() => portfolio.id, { onDelete: 'cascade' }).notNull(),
-  stockIsin: varchar('stock_isin', { length: 255 }).references(() => stock.isin, { onDelete: 'cascade' }).notNull(),
+  portfolioId: uuid('portfolio_id')
+    .references(() => portfolio.id, { onDelete: 'cascade' })
+    .notNull(),
+  stockIsin: varchar('stock_isin', { length: 255 }).notNull(),
   quantity: integer('quantity').notNull(),
   updatedAt: timestamp('updated_at').notNull(),
 });
 
 export const account = pgTable('account', {
   id: uuid('id').primaryKey(),
-  userId: uuid('user_id').references(() => user.id, { onDelete: 'cascade' }).notNull(),
+  userId: uuid('user_id')
+    .references(() => user.id, { onDelete: 'cascade' })
+    .notNull(),
   name: varchar('name', { length: 255 }).notNull(),
-  balance: numeric('balance').notNull().default("0"),
+  balance: numeric('balance').notNull().default('0'),
   updatedAt: timestamp('updated_at').notNull(),
 });
 
 export const order = pgTable('order', {
   id: uuid('id').primaryKey(),
-  portfolioId: uuid('portfolio_id').references(() => portfolio.id, { onDelete: 'cascade' }).notNull(),
-  stockIsin: varchar('stock_isin', { length: 255 }).references(() => stock.isin, { onDelete: 'cascade' }).notNull(),
+  portfolioId: uuid('portfolio_id')
+    .references(() => portfolio.id, { onDelete: 'cascade' })
+    .notNull(),
+  stockIsin: varchar('stock_isin', { length: 255 }).notNull(),
   quantity: integer('quantity').notNull(),
   placedAt: timestamp('placed_at').notNull(),
   createdAt: timestamp('created_at').notNull(),
@@ -45,7 +53,9 @@ export const order = pgTable('order', {
 
 export const transaction = pgTable('transaction', {
   id: uuid('id').primaryKey(),
-  accountId: uuid('account_id').references(() => account.id, { onDelete: 'cascade' }).notNull(),
+  accountId: uuid('account_id')
+    .references(() => account.id, { onDelete: 'cascade' })
+    .notNull(),
   amount: numeric('amount').notNull(),
   executedAt: timestamp('executed_at').notNull(),
   createdAt: timestamp('created_at').notNull(),

@@ -5,14 +5,14 @@ import { createUserWithDefaults, seedStocks, TEST_STOCKS } from '../tests/helper
 
 async function seedTransaction(userId: string, amount: number, executedAt: Date) {
   return request(app)
-    .post(`/users/${userId}/accounts/transactions`)
+    .post(`/users/${userId}/transactions`)
     .send({ amount, executedAt: executedAt.toISOString() });
 }
 
 async function seedOrder(userId: string, quantity: number, placedAt: Date) {
   await seedStocks();
   return request(app)
-    .post(`/users/${userId}/portfolios/orders`)
+    .post(`/users/${userId}/portfolio/orders`)
     .send({ stockIsin: TEST_STOCKS[0].isin, quantity, placedAt: placedAt.toISOString() });
 }
 
@@ -145,7 +145,11 @@ describe('GET /users/:userId/operations', () => {
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(2);
-      expect(res.body.every((op: { date: string }) => new Date(op.date) >= new Date('2024-01-15T00:00:00.000Z'))).toBe(true);
+      expect(
+        res.body.every(
+          (op: { date: string }) => new Date(op.date) >= new Date('2024-01-15T00:00:00.000Z')
+        )
+      ).toBe(true);
     });
 
     it('returns empty array when no operations fall within the range', async () => {
@@ -187,9 +191,15 @@ describe('GET /users/:userId/operations', () => {
 
       expect(res.status).toBe(200);
       expect(res.body).toHaveLength(2);
-      expect(res.body.every((op: { date: string }) => new Date(op.date) >= new Date('2024-02-01T00:00:00.000Z'))).toBe(true);
+      expect(
+        res.body.every(
+          (op: { date: string }) => new Date(op.date) >= new Date('2024-02-01T00:00:00.000Z')
+        )
+      ).toBe(true);
       // Newest first
-      expect(new Date(res.body[0].date).getTime()).toBeGreaterThan(new Date(res.body[1].date).getTime());
+      expect(new Date(res.body[0].date).getTime()).toBeGreaterThan(
+        new Date(res.body[1].date).getTime()
+      );
     });
   });
 });

@@ -24,7 +24,8 @@ router.get('/', async (req: Request, res: Response) => {
     res.status(404).json({ error: 'Portfolio not found' });
     return;
   }
-  res.json(portfolio);
+  const holdings = await holdingService.getByPortfolioId(portfolio.id);
+  res.json({ ...portfolio, holdings });
 });
 
 router.patch('/', async (req: Request, res: Response) => {

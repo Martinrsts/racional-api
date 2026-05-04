@@ -11,13 +11,6 @@ export type OrderRecord = {
   createdAt: Date;
 };
 
-export type NewHoldingFromOrdersWithStock = {
-  portfolioId: string;
-  stockIsin: string;
-  quantity: number;
-  currentPrice: string;
-};
-
 export const orderRepository = {
   async create(data: OrderRecord): Promise<OrderRecord> {
     const [created] = await db.insert(order).values(data).returning();

@@ -1,6 +1,6 @@
 import { and, eq, gt, isNull, sql } from 'drizzle-orm';
 import { db } from '../client.js';
-import { holding, order, stock } from '../schema.js';
+import { holding, order } from '../schema.js';
 
 export type HoldingRecord = {
   id: string;
@@ -10,12 +10,8 @@ export type HoldingRecord = {
   updatedAt: Date;
 };
 
-export type HoldingWithPrice = HoldingRecord & {
-  currentPrice: string;
-};
-
 export const holdingRepository = {
-  async findByPortfolioIdWithStock(portfolioId: string): Promise<HoldingWithPrice[]> {
+  async findByPortfolioId(portfolioId: string): Promise<HoldingRecord[]> {
     const results = await db
       .select({
         id: holding.id,
@@ -23,12 +19,10 @@ export const holdingRepository = {
         stockIsin: holding.stockIsin,
         quantity: holding.quantity,
         updatedAt: holding.updatedAt,
-        currentPrice: stock.currentPrice,
       })
       .from(holding)
-      .innerJoin(stock, eq(holding.stockIsin, stock.isin))
       .where(eq(holding.portfolioId, portfolioId));
-    return results as HoldingWithPrice[];
+    return results;
   },
 
   async createMissingHoldingsFromOrders(portfolioId: string): Promise<void> {

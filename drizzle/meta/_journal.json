@@ -71,6 +71,13 @@
       "when": 1777843525901,
       "tag": "0009_chunky_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1777859916492,
+      "tag": "0010_yielding_rafael_vega",
+      "breakpoints": true
     }
   ]
 }
