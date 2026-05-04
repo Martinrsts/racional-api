@@ -126,12 +126,15 @@ Aquí se encuentra un resumen de cómo se cumplen los requisitos del desfío, pa
 **Respuesta `200`:**
 
 ```json
-{
-  "id": "...",
-  "email": "...",
-  "firstName": "...",
-  "lastName": "..."
-}
+[
+  {
+    "id": "...",
+    "email": "...",
+    "firstName": "...",
+    "lastName": "..."
+  }
+  ...
+]
 ```
 
 ---
