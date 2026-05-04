@@ -1,8 +1,8 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { EmailAlreadyInUseError } from '../errors.js';
-import { userService } from '../services/user.service.js';
-import { accountService } from '../services/account.service.js';
+import { userService } from '../services/userService.js';
+import { accountService } from '../services/accountService.js';
 
 const router = Router();
 const updateUserSchema = z
@@ -16,9 +16,9 @@ const updateUserSchema = z
   });
 
 const createUserSchema = z.object({
-    email: z.string().email(),
-    firstName: z.string().min(1).optional(),
-    lastName: z.string().min(1).optional(),
+  email: z.string().email(),
+  firstName: z.string().min(1).optional(),
+  lastName: z.string().min(1).optional(),
 });
 
 router.patch('/:userId', async (req: Request, res: Response) => {
@@ -43,35 +43,40 @@ router.patch('/:userId', async (req: Request, res: Response) => {
 });
 
 router.post('/', async (req: Request, res: Response) => {
-    const result = createUserSchema.safeParse(req.body);
-    if (!result.success) {
-        res.status(400).json({ error: result.error.flatten() });
-        return;
-    }
+  const result = createUserSchema.safeParse(req.body);
+  if (!result.success) {
+    res.status(400).json({ error: result.error.flatten() });
+    return;
+  }
 
-    try {
-        const created = await userService.create(result.data);
-        res.status(201).json(created);
-    } catch (err) {
-        if (err instanceof EmailAlreadyInUseError) {
-            res.status(409).json({ error: err.message });
-            return;
-        }
-        throw err;
+  try {
+    const created = await userService.create(result.data);
+    res.status(201).json(created);
+  } catch (err) {
+    if (err instanceof EmailAlreadyInUseError) {
+      res.status(409).json({ error: err.message });
+      return;
     }
+    throw err;
+  }
 });
 
 router.get('/:userId', async (req: Request, res: Response) => {
-    const userId = req.params.userId;
-    const [user, account] = await Promise.all([
-        userService.getById(userId),
-        accountService.getByUserId(userId),
-    ]);
-    if (!user) {
-        res.status(404).json({ error: 'User not found' });
-        return;
-    }
-    res.json({ ...user, balance: account?.balance ?? null });
+  const userId = req.params.userId;
+  const [user, account] = await Promise.all([
+    userService.getById(userId),
+    accountService.getByUserId(userId),
+  ]);
+  if (!user) {
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+  res.json({ ...user, balance: account?.balance ?? null });
+});
+
+router.get('/', async (req: Request, res: Response) => {
+  const users = await userService.getAll();
+  res.json(users);
 });
 
 export { router as userRouter };

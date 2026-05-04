@@ -1,6 +1,6 @@
-import { HoldingRecord, holdingRepository } from '../db/repositories/holding.repository.js';
-import { portfolioRepository } from '../db/repositories/portfolio.repository.js';
-import { stockPriceProvider } from './stockPriceProvider.js';
+import { HoldingRecord, holdingRepository } from '../db/repositories/holdingRepository.js';
+import { portfolioRepository } from '../db/repositories/portfolioRepository.js';
+import stockPriceProvider from '../providers/postgresStockPriceProvider.js';
 
 export type HoldingTotal = HoldingRecord & { holdingValue: number };
 

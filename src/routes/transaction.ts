@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { transactionService } from '../services/transaction.service.js';
+import { transactionService } from '../services/transactionService.js';
 
 const router = Router({ mergeParams: true });
 

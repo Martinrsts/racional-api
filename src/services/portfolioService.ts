@@ -1,4 +1,4 @@
-import { portfolioRepository } from '../db/repositories/portfolio.repository.js';
+import { portfolioRepository } from '../db/repositories/portfolioRepository.js';
 
 export type PortfolioRecord = {
   id: string;
@@ -23,12 +23,14 @@ export const portfolioService = {
     return portfolioRepository.findByUserId(userId);
   },
 
-  async updateUserPortfolio(userId: string, data: { name: string }): Promise<PortfolioRecord | null> {
+  async updateUserPortfolio(
+    userId: string,
+    data: { name: string }
+  ): Promise<PortfolioRecord | null> {
     const portfolio = await portfolioRepository.findByUserId(userId);
     if (!portfolio) {
       return null;
     }
     return portfolioRepository.update(portfolio.id, data);
   },
-
 };

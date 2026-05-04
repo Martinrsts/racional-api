@@ -13,7 +13,7 @@
 1. Clonar el repositorio
 2. Instalar dependencias con `npm install`
 3. Configurar una base de datos PostgreSQL y un usuario con acceso a ella. Actualizar las variables de entorno en el archivo `.env` (puede copiar el archivo `.env.example` y modificarlo)
-4. Ejecutar las migraciones con `npm run db:migrate`
+4. Ejecutar las migraciones con `npm run db:migrate` y opcionalmente las semillas con `npm run db:seed`.
 5. Compilar el proyecto con `npm run build` y luego iniciar el servidor con `npm start` o usar `npm run dev` para iniciar el servidor en modo desarrollo (con hot reload).
 6. La API estará disponible en `http://localhost:3000`
 
@@ -56,7 +56,7 @@ Por esta razón, se asume que el sistema funciona como un registro histórico de
   - Cada vez que se consulta un portafolio o una cuenta, primero se actualizan sus datos usando todas las órdenes y transacciones nuevas (todas las con `createdAt` mayor a `updatedAt`). Sólo después de esta actualización se devuelve la información al cliente.
 
 - Almacenamiento de stocks
-  - Los stocks se almacenan en la base de datos usando el código ISIN como clave primaria, y solo se guarda su precio. Ninguna otra tabla tiene una relación directa con la tabla de stocks, sino que se relacionan a través del código ISIN.
+  - Los stocks se almacenan en la base de datos usando el código ISIN como clave primaria, y solo se guarda su precio. Ninguna otra tabla tiene una relación directa con la tabla de stocks, sino que se relacionan a través del código ISIN. Evité JOINS con esta tabla en consultas para mantenerlo desacoplado.
 
   - Esto simplifica el modelo y lo desacopla del resto del sistema. En caso de integrar una API real, solo habría que modificar el `stockPriceProvider`.
 
@@ -116,6 +116,23 @@ Aquí se encuentra un resumen de cómo se cumplen los requisitos del desfío, pa
 
 - `400` — Datos inválidos
 - `409` — El email ya está en uso
+
+---
+
+#### `GET /users`
+
+**Descripción breve:** Helper para obtener una lista de todos los usuarios .
+
+**Respuesta `200`:**
+
+```json
+{
+  "id": "...",
+  "email": "...",
+  "firstName": "...",
+  "lastName": "..."
+}
+```
 
 ---
 

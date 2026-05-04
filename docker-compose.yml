@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:16-alpine
+    env_file:
+      - path: .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -21,9 +23,8 @@ services:
       target: builder
     env_file:
       - path: .env
-        required: false
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/racional
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-racional}
     depends_on:
       postgres:
         condition: service_healthy
@@ -31,13 +32,25 @@ services:
       sh -c "npx drizzle-kit migrate --config=drizzle.config.ts"
     restart: 'no'
 
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.seed
+    env_file:
+      - path: .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-racional}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    restart: 'no'
+
   racional-api:
     build: .
     env_file:
       - path: .env
-        required: false
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/racional
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-racional}
     ports:
       - '${API_PORT:-3000}:3000'
     depends_on:
@@ -49,10 +62,10 @@ services:
   postgres-test:
     image: postgres:16-alpine
     profiles: ['test']
+    env_file:
+      - path: .env
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: racional
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-racional}
     ports:
       - '5433:5432'
     volumes:

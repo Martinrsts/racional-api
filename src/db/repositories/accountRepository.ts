@@ -7,7 +7,7 @@ export type AccountRecord = {
   userId: string;
   name: string;
   balance: string;
-  updatedAt: Date;
+  updatedAt: Date | null;
 };
 
 export const accountRepository = {

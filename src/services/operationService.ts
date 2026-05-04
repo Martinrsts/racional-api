@@ -1,7 +1,7 @@
-import { transactionService } from './transaction.service.js';
-import { orderService } from './order.service.js';
-import { TransactionRecord } from '../db/repositories/transaction.repository.js';
-import { OrderRecord } from '../db/repositories/order.repository.js';
+import { transactionService } from './transactionService.js';
+import { orderService } from './orderService.js';
+import { TransactionRecord } from '../db/repositories/transactionRepository.js';
+import { OrderRecord } from '../db/repositories/orderRepository.js';
 
 type TransactionOperation = TransactionRecord & { type: 'transaction'; date: Date };
 type OrderOperation = OrderRecord & { type: 'order'; date: Date };

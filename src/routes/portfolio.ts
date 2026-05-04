@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
-import { portfolioService } from '../services/portfolio.service.js';
-import { holdingService } from '../services/holding.service.js';
+import { portfolioService } from '../services/portfolioService.js';
+import { holdingService } from '../services/holdingService.js';
 
 const router = Router({ mergeParams: true });
 

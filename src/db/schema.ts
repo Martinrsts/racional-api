@@ -37,7 +37,7 @@ export const account = pgTable('account', {
     .notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   balance: numeric('balance').notNull().default('0'),
-  updatedAt: timestamp('updated_at').notNull(),
+  updatedAt: timestamp('updated_at'),
 });
 
 export const order = pgTable('order', {

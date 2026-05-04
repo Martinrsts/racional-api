@@ -1,8 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../client.js';
 import { portfolio } from '../schema.js';
-import { PortfolioRecord } from '../../services/portfolio.service.js';
-
+import { PortfolioRecord } from '../../services/portfolioService.js';
 
 export const portfolioRepository = {
   async create(data: PortfolioRecord): Promise<PortfolioRecord> {

@@ -1,5 +1,5 @@
-import { orderRepository, OrderRecord } from '../db/repositories/order.repository.js';
-import { portfolioRepository } from '../db/repositories/portfolio.repository.js';
+import { orderRepository, OrderRecord } from '../db/repositories/orderRepository.js';
+import { portfolioRepository } from '../db/repositories/portfolioRepository.js';
 
 export const orderService = {
   async createOrderFromUser(

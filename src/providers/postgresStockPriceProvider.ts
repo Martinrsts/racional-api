@@ -1,6 +1,7 @@
-import { stockRepository } from '../db/repositories/stock.repository.js';
+import { stockRepository } from '../db/repositories/stockRepository.js';
+import { StockPriceProvider } from './stockPriceProvider.js';
 
-export const stockPriceProvider = {
+const PostgresStockPriceProvider: StockPriceProvider = {
   async getPrices(isns: string[]): Promise<Record<string, number>> {
     const pricesFromRepository = await stockRepository.getPrices(isns);
     const prices: Record<string, number> = {};
@@ -11,3 +12,5 @@ export const stockPriceProvider = {
     }, prices);
   },
 };
+
+export default PostgresStockPriceProvider;

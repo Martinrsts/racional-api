@@ -1,15 +1,14 @@
-import { userRepository } from '../db/repositories/user.repository.js';
+import { userRepository } from '../db/repositories/userRepository.js';
 import { EmailAlreadyInUseError } from '../errors.js';
-import { portfolioService } from './portfolio.service.js';
-import { accountService } from './account.service.js';
+import { portfolioService } from './portfolioService.js';
+import { accountService } from './accountService.js';
 
 export type UserRecord = {
-    id: string;
-    email: string;
-    firstName: string | null;
-    lastName: string | null;
-}
-
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+};
 
 export const userService = {
   async create(data: {
@@ -61,5 +60,9 @@ export const userService = {
 
   async getById(userId: string): Promise<UserRecord | null> {
     return await userRepository.read(userId);
-  }
+  },
+
+  async getAll(): Promise<UserRecord[]> {
+    return await userRepository.readAll();
+  },
 };

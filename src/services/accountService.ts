@@ -1,4 +1,4 @@
-import { accountRepository, AccountRecord } from '../db/repositories/account.repository.js';
+import { accountRepository, AccountRecord } from '../db/repositories/accountRepository.js';
 
 export const accountService = {
   async create(data: { userId: string; name: string }): Promise<AccountRecord> {

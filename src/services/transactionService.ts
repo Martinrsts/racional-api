@@ -1,8 +1,8 @@
-import { accountRepository } from '../db/repositories/account.repository.js';
+import { accountRepository } from '../db/repositories/accountRepository.js';
 import {
   transactionRepository,
   TransactionRecord,
-} from '../db/repositories/transaction.repository.js';
+} from '../db/repositories/transactionRepository.js';
 
 export const transactionService = {
   async createTransactionFromUser(

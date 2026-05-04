@@ -2,16 +2,15 @@ import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { db } from '../client.js';
 import { user } from '../schema.js';
-import { UserRecord } from '../../services/user.service.js';
+import { UserRecord } from '../../services/userService.js';
 
-export type UpdateUserData = Partial<Omit<UserRecord, 'id'>>
+export type UpdateUserData = Partial<Omit<UserRecord, 'id'>>;
 
 function isUniqueConstraintError(err: unknown): boolean {
   return err instanceof postgres.PostgresError && err.code === '23505';
 }
 
 export const userRepository = {
-
   async create(data: UserRecord): Promise<UserRecord> {
     try {
       const [created] = await db.insert(user).values(data).returning();
@@ -42,5 +41,9 @@ export const userRepository = {
   async read(id: string): Promise<UserRecord | null> {
     const [found] = await db.select().from(user).where(eq(user.id, id));
     return found ?? null;
-  }
+  },
+
+  async readAll(): Promise<UserRecord[]> {
+    return await db.select().from(user);
+  },
 };
